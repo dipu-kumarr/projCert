@@ -1,0 +1,52 @@
+if you want to run php application for permanent -it will progess not mark succesful 
+# Navigate to the project directory
+cd $WORKSPACE  # This is the default Jenkins workspace directory
+
+# Start the PHP built-in server
+php -S localhost:8000 -t public &  # Run in the background
+sleep 5  # Wait for the server to start
+
+# Run your tests (adjust path as necessary)
+./vendor/bin/phpunit
+
+# Optionally, stop the server (you might need to manage this depending on your setup)
+# kill $(jobs -p)  # This stops background jobs
+
+
+
+
+if you want o test for 10 sec use this  but this will show you succesful after testing by jenkins
+
+# Navigate to the workspace
+cd /var/lib/jenkins/workspace/DEVELOPER_COMPILE
+
+# Start PHP server in the background using nohup
+nohup php -S 0.0.0.0:8001 -t /var/lib/jenkins/workspace/DEVELOPER_COMPILE/website > php_server.log 2>&1 &
+
+# Store the PHP server's process ID (PID) to stop it later
+PHP_PID=$!
+
+# Wait a bit to ensure the server is running
+sleep 5
+
+# Here, you can add any additional test, deploy, or build steps
+# For example, you could run a simple curl command to ensure the server is responding
+curl -s http://localhost:8001 > /dev/null
+
+# Check if curl was successful
+if [ $? -eq 0 ]; then
+    echo "PHP server is running successfully."
+else
+    echo "Failed to connect to PHP server."
+    kill $PHP_PID
+    exit 1
+fi
+
+# Simulate a delay (optional)
+sleep 10
+
+# After the process is done, kill the PHP server using its PID
+kill $PHP_PID
+
+# Ensure the server is stopped
+wait $PHP_PID || true  # Ignore errors if the process is already gone
